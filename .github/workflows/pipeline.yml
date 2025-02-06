@@ -1,4 +1,8 @@
-name: CI/CD Pipeline
+- name: Check Docker secrets
+  run: |
+    echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}"
+    echo "DOCKER_PASSWORD=${{ secrets.DOCKER_PASSWORD }}"
+
 
 on:
   push:
