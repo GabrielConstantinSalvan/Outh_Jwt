@@ -31,11 +31,10 @@ jobs:
       - name: Verificar versão do Docker  # Passo para verificar a versão do Docker instalada
         run: docker --version  # Exibe a versão do Docker
 
-      - name: Log in to Docker Hub  # Passo para fazer login no Docker Hub
-        uses: docker/login-action@v3  # Usa a ação oficial do Docker para fazer login
-        with:
-          username: ${{ vars.DOCKER_USERNAME }}  # Usa a variável DOCKER_USERNAME (definida no GitHub)
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Usa a secret DOCKER_PASSWORD (definida no GitHub)
+		env:
+		  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+		  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+		run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - name: Enviar imagem para o Docker Hub  # Passo para enviar a imagem Docker para o Docker Hub
         run: |
