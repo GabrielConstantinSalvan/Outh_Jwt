@@ -28,13 +28,14 @@ jobs:
         run: |
           docker build -t gabrielconstantin830/springboot-outh_jwt:latest .  # Constrói a imagem Docker com a tag especificada
 
-      - name: Verificar versão do Docker  # Passo para verificar a versão do Docker instalada
-        run: docker --version  # Exibe a versão do Docker
+		  - name: Verificar versão do Docker  # Passo para verificar a versão do Docker instalada
+		    run: docker --version  # Exibe a versão do Docker
 
-		env:
-		  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-		  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-		run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+		  - name: Log in to Docker Hub  # Passo para fazer login no Docker Hub
+		    env:
+		      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Usa a secret DOCKER_USERNAME
+		      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Usa a secret DOCKER_PASSWORD
+		    run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       - name: Enviar imagem para o Docker Hub  # Passo para enviar a imagem Docker para o Docker Hub
         run: |
