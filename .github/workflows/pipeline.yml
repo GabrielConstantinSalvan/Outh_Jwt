@@ -67,5 +67,17 @@ jobs:
           kubectl apply -f mysql-deployment.yml  # Aplica o arquivo de configuração do MySQL
           kubectl apply -f springboot-deployment.yml  # Aplica o arquivo de configuração do Spring Boot
 
-      - name: Expor o serviço  # Passo para expor o serviço no Kubernetes
+      - name: Verificar se o serviço já existe
+        id: check-service
+        run: |
+          if kubectl get service springboot-service > /dev/null 2>&1; then
+            echo "O serviço já existe. Pulando a criação."
+            echo "service_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "O serviço não existe. Criando..."
+            echo "service_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Expor o serviço (se não existir)
+        if: steps.check-service.outputs.service_exists == 'false'
         run: kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service  # Expõe o serviço como um LoadBalancer
