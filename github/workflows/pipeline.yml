@@ -62,10 +62,10 @@ jobs:
       - name: Iniciar Minikube  # Passo para iniciar o Minikube
         run: minikube start --driver=docker  # Inicia o Minikube usando o driver Docker
 
-      - name: Aplicar Configurações do Kubernetes  # Passo para aplicar as configurações do Kubernetes
-        run: |
-          kubectl apply -f mysql-deployment.yml  # Aplica o arquivo de configuração do MySQL
-          kubectl apply -f springboot-deployment.yml  # Aplica o arquivo de configuração do Spring Boot
+		- name: Aplicar Configurações do Kubernetes
+		  run: |
+		    kubectl apply -f mysql-deployment.yml  # Nome corrigido
+		    kubectl apply -f springboot-deployment.yml
 
       - name: Expor o serviço  # Passo para expor o serviço no Kubernetes
         run: kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service  # Expõe o serviço como um LoadBalancer
