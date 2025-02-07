@@ -1,71 +1,71 @@
+name: CI/CD Pipeline  # Nome do pipeline
+
 on:
   push:
     branches:
       - main  # Executa o pipeline quando houver um push na branch main
   pull_request:
     branches:
-      - main
+      - main  # Executa o pipeline quando houver um pull request para a branch main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build:  # Job responsável por construir o projeto e criar a imagem Docker
+    runs-on: ubuntu-latest  # Executa o job em um ambiente Ubuntu
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v3
+      - name: Checkout do código  # Passo para clonar o repositório
+        uses: actions/checkout@v3  # Usa a ação oficial do GitHub para clonar o repositório
 
-      - name: Configurar JDK 17
-        uses: actions/setup-java@v3
+      - name: Configurar JDK 17  # Passo para configurar o JDK 17
+        uses: actions/setup-java@v3  # Usa a ação oficial do GitHub para configurar o Java
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: 'temurin'  # Usa a distribuição Temurin do JDK
+          java-version: '17'  # Define a versão do Java como 17
 
-      - name: Build do projeto com Maven
-        run: mvn clean package -DskipTests
+      - name: Build do projeto com Maven  # Passo para construir o projeto usando Maven
+        run: mvn clean package -DskipTests  # Executa o comando Maven para limpar e empacotar o projeto, ignorando os testes
 
-      - name: Criar imagem Docker
+      - name: Criar imagem Docker  # Passo para criar a imagem Docker
         run: |
-          docker build -t gabrielconstantin830/springboot-outh_jwt:latest .
+          docker build -t gabrielconstantin830/springboot-outh_jwt:latest .  # Constrói a imagem Docker com a tag especificada
 
-      - name: Debug Secrets
+      - name: Verificar versão do Docker  # Passo para verificar a versão do Docker instalada
+        run: docker --version  # Exibe a versão do Docker
+
+      - name: Log in to Docker Hub  # Passo para fazer login no Docker Hub
+        uses: docker/login-action@v3  # Usa a ação oficial do Docker para fazer login
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}  # Usa a variável DOCKER_USERNAME (definida no GitHub)
+          password: ${{ secrets.DOCKER_PASSWORD }}  # Usa a secret DOCKER_PASSWORD (definida no GitHub)
+
+      - name: Enviar imagem para o Docker Hub  # Passo para enviar a imagem Docker para o Docker Hub
         run: |
-          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}"
-          echo "DOCKER_PASSWORD está definido? $(if [[ -n \"${{ secrets.DOCKER_PASSWORD }}\" ]]; then echo 'SIM'; else echo 'NÃO'; fi)"
+          docker tag gabrielconstantin830/springboot-outh_jwt:latest gabrielconstantin830/springboot-outh_jwt:1.0  # Adiciona uma nova tag à imagem
+          docker push gabrielconstantin830/springboot-outh_jwt:1.0  # Envia a imagem para o Docker Hub
 
-      - name: Login no Docker Hub
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-
-      - name: Enviar imagem para o Docker Hub
-        run: |
-          docker tag gabrielconstantin830/springboot-outh_jwt:latest gabrielconstantin830/springboot-outh_jwt:1.0
-          docker push gabrielconstantin830/springboot-outh_jwt:1.0
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build  # Só roda depois do job build
+  deploy:  # Job responsável por implantar a aplicação no Kubernetes
+    runs-on: ubuntu-latest  # Executa o job em um ambiente Ubuntu
+    needs: build  # Só executa este job após o job "build" ser concluído
     steps:
-      - name: Checkout do código
-        uses: actions/checkout@v3
+      - name: Checkout do código  # Passo para clonar o repositório
+        uses: actions/checkout@v3  # Usa a ação oficial do GitHub para clonar o repositório
 
-      - name: Instalar Kubectl e Minikube
+      - name: Instalar Kubectl e Minikube  # Passo para instalar o Kubectl e o Minikube
         run: |
-          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
+          curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"  # Baixa o Kubectl
+          chmod +x kubectl  # Torna o Kubectl executável
+          sudo mv kubectl /usr/local/bin/  # Move o Kubectl para o diretório de binários
 
-          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-          chmod +x minikube-linux-amd64
-          sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64  # Baixa o Minikube
+          chmod +x minikube-linux-amd64  # Torna o Minikube executável
+          sudo mv minikube-linux-amd64 /usr/local/bin/minikube  # Move o Minikube para o diretório de binários
 
-      - name: Iniciar Minikube
-        run: minikube start --driver=docker
+      - name: Iniciar Minikube  # Passo para iniciar o Minikube
+        run: minikube start --driver=docker  # Inicia o Minikube usando o driver Docker
 
-      - name: Aplicar Configurações do Kubernetes
+      - name: Aplicar Configurações do Kubernetes  # Passo para aplicar as configurações do Kubernetes
         run: |
-          kubectl apply -f msyql-deployment.yml
-          kubectl apply -f springboot-deployment.yml
+          kubectl apply -f mysql-deployment.yml  # Aplica o arquivo de configuração do MySQL
+          kubectl apply -f springboot-deployment.yml  # Aplica o arquivo de configuração do Spring Boot
 
-      - name: Expor o serviço
-        run: kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service
+      - name: Expor o serviço  # Passo para expor o serviço no Kubernetes
+        run: kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service  # Expõe o serviço como um LoadBalancer
