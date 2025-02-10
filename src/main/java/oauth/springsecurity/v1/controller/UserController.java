@@ -20,54 +20,61 @@ import oauth.springsecurity.v1.entities.User;
 import oauth.springsecurity.v1.repository.RoleRepository;
 import oauth.springsecurity.v1.repository.UserRepository;
 
-@RestController	
+// Indica que esta classe é um controlador REST do Spring.
+@RestController
 public class UserController {
 
-	private final UserRepository userRepository;
-	private final RoleRepository roleRepository;
-	private final BCryptPasswordEncoder passwordEncoder;
-	
-	
-	public UserController(UserRepository userRepository,
-						RoleRepository roleRepository,
-						BCryptPasswordEncoder passwordEncoder) {
-		this.userRepository = userRepository;
-		this.roleRepository = roleRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
-	
-	@Transactional
-	@PostMapping("/users")
-	public ResponseEntity<Void> newUser (@RequestBody CreateUserDto dto){
-		
-		var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
-		
-		var userFromDb =userRepository.findByUsername(dto.username());
-		
-		if(userFromDb.isPresent()) {
-			
-			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
-		}
-		
-		var user = new User();
-		user.setUsername(dto.username());
-		user.setPassword(passwordEncoder.encode(dto.password()));
-		user.setRoles(Set.of(basicRole));
-		
-		userRepository.save(user);
-			
-		
-		return ResponseEntity.ok().build();
-		
-	}
-		
-		@GetMapping("/users")
-		@PreAuthorize("hasAuthority('SCOPE_admin')")
-		public ResponseEntity<List<User>> ListUsers(){
-			
-			var users = userRepository.findAll();
-			
-			return ResponseEntity.ok(users);
-		}
-	}
+    private final UserRepository userRepository; // Repositório para gerenciar usuários no banco de dados.
+    private final RoleRepository roleRepository; // Repositório para gerenciar roles (permissões) no banco de dados.
+    private final BCryptPasswordEncoder passwordEncoder; // Codificador de senhas para armazenar senhas de forma segura.
 
+    // Construtor para injetar as dependências.
+    public UserController(UserRepository userRepository,
+                          RoleRepository roleRepository,
+                          BCryptPasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    // Método para criar um novo usuário. A transação garante que todas as operações sejam atômicas.
+    @Transactional
+    @PostMapping("/users")
+    public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
+
+        // Busca o papel (role) padrão "BASIC" no banco de dados.
+        var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
+
+        // Verifica se o usuário já existe no banco de dados.
+        var userFromDb = userRepository.findByUsername(dto.username());
+
+        if (userFromDb.isPresent()) {
+            // Se o usuário já existir, lança uma exceção informando que a entidade não pode ser processada.
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        // Cria um novo usuário e configura suas propriedades.
+        var user = new User();
+        user.setUsername(dto.username()); // Define o nome de usuário.
+        user.setPassword(passwordEncoder.encode(dto.password())); // Codifica a senha antes de armazená-la.
+        user.setRoles(Set.of(basicRole)); // Atribui a role básica ao usuário.
+
+        // Salva o usuário no banco de dados.
+        userRepository.save(user);
+
+        // Retorna uma resposta HTTP 200 OK sem corpo.
+        return ResponseEntity.ok().build();
+    }
+
+    // Método para listar todos os usuários. Somente administradores podem acessar.
+    @GetMapping("/users")
+    @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso apenas a usuários com a permissão "admin".
+    public ResponseEntity<List<User>> ListUsers() {
+
+        // Busca todos os usuários no banco de dados.
+        var users = userRepository.findAll();
+
+        // Retorna a lista de usuários com status HTTP 200 OK.
+        return ResponseEntity.ok(users);
+    }
+}

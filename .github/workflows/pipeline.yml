@@ -3,81 +3,82 @@ name: CI/CD Pipeline  # Nome do pipeline
 on:
   push:
     branches:
-      - main  # Executa o pipeline quando houver um push na branch main
+      - main  # Executa o pipeline sempre que houver um push para a branch "main"
   pull_request:
     branches:
-      - main  # Executa o pipeline quando houver um pull request para a branch main
+      - main  # Executa o pipeline quando um pull request for aberto para a branch "main"
 
 jobs:
-  build:  # Job responsável por construir o projeto e criar a imagem Docker
-    runs-on: ubuntu-latest  # Executa o job em um ambiente Ubuntu
+  build:  # Job responsável pela construção do projeto e criação da imagem Docker
+    runs-on: ubuntu-latest  # O job é executado em um ambiente Ubuntu mais recente
     steps:
-      - name: Checkout do código  # Passo para clonar o repositório
-        uses: actions/checkout@v3  # Usa a ação oficial do GitHub para clonar o repositório
+      - name: Checkout do código  # Passo para fazer o checkout (clonagem) do código fonte
+        uses: actions/checkout@v3  # Ação do GitHub para clonar o repositório
 
-      - name: Configurar JDK 17  # Passo para configurar o JDK 17
-        uses: actions/setup-java@v3  # Usa a ação oficial do GitHub para configurar o Java
+      - name: Configurar JDK 17  # Passo para configurar o JDK 17 no ambiente
+        uses: actions/setup-java@v3  # Ação oficial do GitHub para configurar o Java
         with:
-          distribution: 'temurin'  # Usa a distribuição Temurin do JDK
-          java-version: '17'  # Define a versão do Java como 17
+          distribution: 'temurin'  # Distribuição Temurin do JDK
+          java-version: '17'  # Especifica a versão do JDK a ser usada (versão 17)
 
-      - name: Build do projeto com Maven  # Passo para construir o projeto usando Maven
-        run: mvn clean package -DskipTests  # Executa o comando Maven para limpar e empacotar o projeto, ignorando os testes
+      - name: Build do projeto com Maven  # Passo para construir o projeto com Maven
+        run: mvn clean package -DskipTests  # Executa o Maven para limpar e empacotar o projeto, ignorando os testes
 
-      - name: Criar imagem Docker  # Passo para criar a imagem Docker
+      - name: Criar imagem Docker  # Passo para criar a imagem Docker do projeto
         run: |
-          docker build -t gabrielconstantin830/springboot-outh_jwt:latest .  # Constrói a imagem Docker com a tag especificada
+          docker build -t gabrielconstantin830/springboot-outh_jwt:latest .  # Constrói a imagem Docker com a tag mais recente
 
-      - name: Verificar versão do Docker  # Passo para verificar a versão do Docker instalada
-        run: docker --version  # Exibe a versão do Docker
+      - name: Verificar versão do Docker  # Passo para exibir a versão do Docker instalada no runner
+        run: docker --version  # Exibe a versão do Docker no console
 
-      - name: Log in to Docker Hub  # Passo para fazer login no Docker Hub
+      - name: Log in to Docker Hub  # Passo para autenticar no Docker Hub
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Usa a secret DOCKER_USERNAME
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Usa a secret DOCKER_PASSWORD
-        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}  # Utiliza o segredo DOCKER_USERNAME armazenado no GitHub Secrets
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}  # Utiliza o segredo DOCKER_PASSWORD armazenado no GitHub Secrets
+        run: echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin  # Realiza login no Docker Hub usando os segredos
 
       - name: Enviar imagem para o Docker Hub  # Passo para enviar a imagem Docker para o Docker Hub
         run: |
-          docker tag gabrielconstantin830/springboot-outh_jwt:latest gabrielconstantin830/springboot-outh_jwt:1.0  # Adiciona uma nova tag à imagem
+          docker tag gabrielconstantin830/springboot-outh_jwt:latest gabrielconstantin830/springboot-outh_jwt:1.0  # Cria uma tag para a imagem Docker
           docker push gabrielconstantin830/springboot-outh_jwt:1.0  # Envia a imagem para o Docker Hub
 
-  deploy:  # Job responsável por implantar a aplicação no Kubernetes
-    runs-on: ubuntu-latest  # Executa o job em um ambiente Ubuntu
-    needs: build  # Só executa este job após o job "build" ser concluído
+  deploy:  # Job responsável pela implantação no Kubernetes
+    runs-on: ubuntu-latest  # O job é executado em um ambiente Ubuntu mais recente
+    needs: build  # Este job só será executado após a conclusão bem-sucedida do job "build"
     steps:
-      - name: Checkout do código  # Passo para clonar o repositório
-        uses: actions/checkout@v3  # Usa a ação oficial do GitHub para clonar o repositório
+      - name: Checkout do código  # Passo para clonar o repositório (novamente, se necessário no job de deploy)
+        uses: actions/checkout@v3  # Ação do GitHub para clonar o repositório
 
-      - name: Instalar Kubectl e Minikube  # Passo para instalar o Kubectl e o Minikube
+      - name: Instalar Kubectl e Minikube  # Passo para instalar o Kubectl e Minikube no ambiente
         run: |
           curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"  # Baixa o Kubectl
           chmod +x kubectl  # Torna o Kubectl executável
-          sudo mv kubectl /usr/local/bin/  # Move o Kubectl para o diretório de binários
+          sudo mv kubectl /usr/local/bin/  # Move o Kubectl para o diretório /usr/local/bin/
 
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64  # Baixa o Minikube
           chmod +x minikube-linux-amd64  # Torna o Minikube executável
-          sudo mv minikube-linux-amd64 /usr/local/bin/minikube  # Move o Minikube para o diretório de binários
+          sudo mv minikube-linux-amd64 /usr/local/bin/minikube  # Move o Minikube para o diretório /usr/local/bin/
 
-      - name: Iniciar Minikube  # Passo para iniciar o Minikube
+      - name: Iniciar Minikube  # Passo para iniciar o Minikube com o driver Docker
         run: minikube start --driver=docker  # Inicia o Minikube usando o driver Docker
 
       - name: Aplicar Configurações do Kubernetes  # Passo para aplicar as configurações do Kubernetes
         run: |
-          kubectl apply -f mysql-deployment.yml  # Aplica o arquivo de configuração do MySQL
-          kubectl apply -f springboot-deployment.yml  # Aplica o arquivo de configuração do Spring Boot
+          kubectl apply -f mysql-deployment.yml  # Aplica a configuração do MySQL no cluster Kubernetes
+          kubectl apply -f springboot-deployment.yml  # Aplica a configuração do Spring Boot no cluster Kubernetes
 
-      - name: Verificar se o serviço já existe
-        id: check-service
+      - name: Verificar se o serviço já existe  # Passo para verificar a existência do serviço Kubernetes
+        id: check-service  # Identificador do passo para referência posterior
         run: |
-          if kubectl get service springboot-service > /dev/null 2>&1; then
-            echo "O serviço já existe. Pulando a criação."
-            echo "service_exists=true" >> $GITHUB_OUTPUT
+          if kubectl get service springboot-service > /dev/null 2>&1; then  # Verifica se o serviço já existe no cluster
+            echo "O serviço já existe. Pulando a criação."  # Se o serviço já existe, exibe a mensagem
+            echo "service_exists=true" >> $GITHUB_OUTPUT  # Marca a variável "service_exists" como true
           else
-            echo "O serviço não existe. Criando..."
-            echo "service_exists=false" >> $GITHUB_OUTPUT
+            echo "O serviço não existe. Criando..."  # Caso contrário, exibe mensagem e cria o serviço
+            echo "service_exists=false" >> $GITHUB_OUTPUT  # Marca a variável "service_exists" como false
           fi
 
-      - name: Expor o serviço (se não existir)
-        if: steps.check-service.outputs.service_exists == 'false'
-        run: kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service  # Expõe o serviço como um LoadBalancer
+      - name: Expor o serviço (se não existir)  # Passo para expor o serviço caso ele não exista
+        if: steps.check-service.outputs.service_exists == 'false'  # Executa apenas se o serviço não existir
+        run: |
+          kubectl expose deployment springboot-app --type=LoadBalancer --name=springboot-service  # Expõe o deployment como um serviço do tipo LoadBalancer
