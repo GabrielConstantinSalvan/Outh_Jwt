@@ -21,7 +21,7 @@ spec:
         - name: MYSQL_DATABASE
           value: "mydb"
         - name: MYSQL_USER
-          value: "admin"
+          value: "root"
         - name: MYSQL_PASSWORD
           value: "root"
         ports:
