@@ -11,11 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Entity
 @Table(name = "tb_users")
 public class User {
-
+	
+	 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "user_id")
     private UUID userId;
+    
 
     @Column(unique = true)
     private String username;
@@ -31,6 +33,7 @@ public class User {
 
 
     public UUID getUserId() {
+    	 System.out.println("Chamando getUserId(): " + userId);
         return userId;
     }
 
