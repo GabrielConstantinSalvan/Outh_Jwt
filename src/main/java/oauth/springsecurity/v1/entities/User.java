@@ -1,11 +1,12 @@
-package tech.buildrun.springsecurity.entities;
+package oauth.springsecurity.v1.entities;
 
 import jakarta.persistence.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import tech.buildrun.springsecurity.controller.dto.LoginRequest;
+import oauth.springsecurity.v1.controller.dto.LoginRequest;
 
 import java.util.Set;
 import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Table(name = "tb_users")
