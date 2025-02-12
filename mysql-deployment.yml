@@ -13,7 +13,7 @@ spec:
         app: mysql
     spec:
       containers:
-      - name: mysql-A  # Nome válido para o container
+      - name: mysql  # Nome válido para o container
         image: mysql:9.2.0
         env:
         - name: MYSQL_ROOT_PASSWORD
