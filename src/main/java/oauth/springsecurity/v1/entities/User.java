@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Entity
 @Table(name = "tb_users")
 public class User {
-	
 	 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
