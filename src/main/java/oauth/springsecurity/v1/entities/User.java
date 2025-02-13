@@ -1,5 +1,6 @@
 package oauth.springsecurity.v1.entities;
 
+
 import jakarta.persistence.*;
 import oauth.springsecurity.v1.controller.dto.LoginRequest;
 
