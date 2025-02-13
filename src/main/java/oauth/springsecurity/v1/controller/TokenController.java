@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import oauth.springsecurity.v1.controller.dto.LoginRequest;
 import oauth.springsecurity.v1.controller.dto.LoginResponse;
+import oauth.springsecurity.v1.entities.Role;
 import oauth.springsecurity.v1.repository.UserRepository;
 
 import java.time.Instant;
@@ -53,16 +54,17 @@ public class TokenController {
         // Mapeia as roles do usuário para um formato adequado no JWT (prefixando com "ROLE_").
         var scopes = user.get().getRoles()
                 .stream()
-                .map(role -> "ROLE_" + role.getName()) // Exemplo: "ROLE_ADMIN"
-                .collect(Collectors.joining(" ")); // Junta os roles separados por espaço.
+                .map(Role::getName)
+                .collect(Collectors.joining(" "));
+
 
         // Constrói as claims (informações dentro do token JWT).
         var claims = JwtClaimsSet.builder()
-                .issuer("mybackend") // Define quem emitiu o token.
-                .subject(user.get().getUserId().toString()) // Identifica o usuário autenticado.
-                .issuedAt(now) // Define quando o token foi gerado.
-                .expiresAt(now.plusSeconds(expiresIn)) // Define a expiração do token.
-                .claim("scope", scopes) // Adiciona os papéis do usuário (roles) ao token.
+                .issuer("mybackend")
+                .subject(user.get().getUserId().toString())
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(expiresIn))
+                .claim("scope", scopes)
                 .build();
 
         // Gera o token JWT baseado nas claims definidas.

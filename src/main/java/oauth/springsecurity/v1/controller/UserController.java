@@ -68,13 +68,9 @@ public class UserController {
 
     // Método para listar todos os usuários. Somente administradores podem acessar.
     @GetMapping("/users")
-    @PreAuthorize("hasAuthority('SCOPE_ADMIN')") // Restringe o acesso apenas a usuários com a permissão "admin".
-    public ResponseEntity<List<User>> ListUsers() {
-
-        // Busca todos os usuários no banco de dados.
+    @PreAuthorize("hasAuthority('SCOPE_ADMIN')")
+    public ResponseEntity<List<User>> listUsers() {
         var users = userRepository.findAll();
-
-        // Retorna a lista de usuários com status HTTP 200 OK.
         return ResponseEntity.ok(users);
     }
 }
