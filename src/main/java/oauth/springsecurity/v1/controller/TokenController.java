@@ -48,7 +48,7 @@ public class TokenController {
 
         var scopes = user.get().getRoles()
                 .stream()
-                .map(Role::getName)
+                .map(role -> "ROLE_" + role.getName()) // Adiciona o prefixo "ROLE_"
                 .collect(Collectors.joining(" "));
 
         var claims = JwtClaimsSet.builder()
