@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
@@ -79,23 +80,14 @@ public class UserController {
     }
     
     @DeleteMapping("/users/{username}")
-    @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso apenas a usuários com a scope "admin"
-    @Transactional // Garante que a operação seja executada dentro de uma transação
+    @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso a admins
+    @Transactional // Garante transação
     public ResponseEntity<Void> deleteUserByUsername(@PathVariable String username) {
-        // Busca o usuário pelo username
-        var userOptional = userRepository.findByUsername(username);
+        userRepository.findByUsername(username)
+            .ifPresentOrElse(userRepository::delete, 
+                () -> { throw new UsernameNotFoundException("Usuário não encontrado: " + username); });
 
-        // Verifica se o usuário existe
-        if (userOptional.isEmpty()) {
-            // Se o usuário não for encontrado, retorna um status 404 (Not Found)
-            return ResponseEntity.notFound().build();
-        }
-
-        // Remove o usuário do banco de dados
-        userRepository.delete(userOptional.get());
-
-        // // Retorna uma resposta HTTP 200 (OK).
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build(); // Retorna 204 (No Content), mais adequado para DELETE
     }
-    
+
 }
