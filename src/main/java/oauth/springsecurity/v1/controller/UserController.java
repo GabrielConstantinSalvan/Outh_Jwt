@@ -6,12 +6,15 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+
 
 import jakarta.transaction.Transactional;
 import oauth.springsecurity.v1.controller.dto.CreateUserDto;
@@ -74,4 +77,25 @@ public class UserController {
         var users = userRepository.findAll();
         return ResponseEntity.ok(users);
     }
+    
+    @DeleteMapping("/users/{username}")
+    @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso apenas a usuários com a scope "admin"
+    @Transactional // Garante que a operação seja executada dentro de uma transação
+    public ResponseEntity<Void> deleteUserByUsername(@PathVariable String username) {
+        // Busca o usuário pelo username
+        var userOptional = userRepository.findByUsername(username);
+
+        // Verifica se o usuário existe
+        if (userOptional.isEmpty()) {
+            // Se o usuário não for encontrado, retorna um status 404 (Not Found)
+            return ResponseEntity.notFound().build();
+        }
+
+        // Remove o usuário do banco de dados
+        userRepository.delete(userOptional.get());
+
+        // // Retorna uma resposta HTTP 200 (OK).
+        return ResponseEntity.ok().build();
+    }
+    
 }
