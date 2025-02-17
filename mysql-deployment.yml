@@ -1,59 +1,64 @@
+# Define um Deployment para o MySQL
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
+  name: mysql  # Nome do deployment
 spec:
-  replicas: 1
+  replicas: 1  # Número de réplicas do pod
   selector:
     matchLabels:
-      app: mysql
+      app: mysql  # Seleciona os pods com este rótulo
   template:
     metadata:
       labels:
-        app: mysql
+        app: mysql  # Define os rótulos do pod
     spec:
       containers:
-      - name: mysql  # Nome válido para o container
-        image: mysql:9.2.0
+      - name: mysql  # Nome do container
+        image: mysql:9.2.0  # Imagem do MySQL (verificar se a versão existe, pois a mais recente conhecida é 8.x)
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "rootpassword"
+          value: "rootpassword"  # Define a senha do usuário root do MySQL
         - name: MYSQL_DATABASE
-          value: "mydb"
+          value: "mydb"  # Cria um banco de dados padrão
         - name: MYSQL_USER
-          value: "admin"
+          value: "admin"  # Define um usuário
         - name: MYSQL_PASSWORD
-          value: "root"
+          value: "root"  # Senha do usuário
         ports:
-        - containerPort: 3306
+        - containerPort: 3306  # Expõe a porta do MySQL dentro do container
         volumeMounts:
-        - name: mysql-data
-          mountPath: /var/lib/mysql
+        - name: mysql-data  # Nome do volume
+          mountPath: /var/lib/mysql  # Monta o volume no diretório de armazenamento do MySQL
       volumes:
       - name: mysql-data
         persistentVolumeClaim:
-          claimName: mysql-pvc
+          claimName: mysql-pvc  # Conecta o PVC ao volume do container
+
 ---
+# Define um Service para expor o MySQL dentro do cluster
 apiVersion: v1
 kind: Service
 metadata:
-  name: mysql-service
+  name: mysql-service  # Nome do serviço
 spec:
   selector:
-    app: mysql
+    app: mysql  # Seleciona os pods com o rótulo "mysql"
   ports:
   - protocol: TCP
-    port: 3306
-    targetPort: 3306
-  type: ClusterIP
+    port: 3306  # Porta do serviço dentro do cluster
+    targetPort: 3306  # Porta do container MySQL
+  type: ClusterIP  # Serviço acessível apenas dentro do cluster
+
 ---
+# Define um PersistentVolumeClaim (PVC) para armazenamento persistente do MySQL
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: mysql-pvc  # Nome do PVC
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteOnce  # O volume pode ser montado como leitura e escrita por um único nó
   resources:
     requests:
-      storage: 1Gi
+      storage: 1Gi  # Solicita 1GB de armazenamento persistente

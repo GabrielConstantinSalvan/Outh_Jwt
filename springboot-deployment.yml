@@ -1,39 +1,43 @@
+# Define um Deployment para a aplicação Spring Boot
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: springboot-app
+  name: springboot-app  # Nome do Deployment
 spec:
-  replicas: 1
+  replicas: 1  # Número de réplicas do pod
   selector:
     matchLabels:
-      app: springboot
+      app: springboot  # Seleciona os pods com este rótulo
   template:
     metadata:
       labels:
-        app: springboot
+        app: springboot  # Define os rótulos do pod
     spec:
       containers:
-      - name: springboot-app-1
-        image: gabrielconstantin830/springboot-outh_jwt:1.0
+      - name: springboot-app-1  # Nome do container
+        image: gabrielconstantin830/springboot-outh_jwt:1.0  # Imagem do Spring Boot no Docker Hub
         env:
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:mysql://mysql-service:3306/mydb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+          # URL de conexão com o banco MySQL (MySQL está acessível pelo serviço "mysql-service")
         - name: SPRING_DATASOURCE_USERNAME
-          value: "admin"
+          value: "admin"  # Usuário do banco de dados
         - name: SPRING_DATASOURCE_PASSWORD
-          value: "root"
+          value: "root"  # Senha do banco de dados (evite expor credenciais em texto plano, use Secrets)
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  # Porta onde a aplicação Spring Boot estará rodando dentro do container
+
 ---
+# Define um Service para expor a aplicação Spring Boot
 apiVersion: v1
 kind: Service
 metadata:
-  name: springboot-service
+  name: springboot-service  # Nome do serviço
 spec:
   selector:
-    app: springboot
+    app: springboot  # Seleciona os pods com o rótulo "springboot"
   ports:
   - protocol: TCP
-    port: 8080
-    targetPort: 8080
-  type: LoadBalancer
+    port: 8080  # Porta exposta pelo serviço
+    targetPort: 8080  # Porta do container que o serviço redireciona as requisições
+  type: LoadBalancer  # Tipo LoadBalancer expõe a aplicação externamente (útil em Cloud Providers)
