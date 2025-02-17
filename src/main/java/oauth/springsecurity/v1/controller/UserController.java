@@ -44,8 +44,8 @@ public class UserController {
     // Endpoint para criação de um novo usuário.
     @Transactional // Garante que a operação de criação do usuário ocorra dentro de uma transação.
     @PostMapping("/users")
+    @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso a admins
     public ResponseEntity<Void> newUser(@RequestBody CreateUserDto dto) {
-
         // Busca a role "BASIC" no banco de dados para atribuí-la ao novo usuário.
         var basicRole = roleRepository.findByName(Role.Values.BASIC.name());
 
