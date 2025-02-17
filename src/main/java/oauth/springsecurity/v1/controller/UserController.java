@@ -83,11 +83,18 @@ public class UserController {
     @PreAuthorize("hasAuthority('SCOPE_admin')") // Restringe o acesso a admins
     @Transactional // Garante transação
     public ResponseEntity<Void> deleteUserByUsername(@PathVariable String username) {
-        userRepository.findByUsername(username)
-            .ifPresentOrElse(userRepository::delete, 
-                () -> { throw new UsernameNotFoundException("Usuário não encontrado: " + username); });
+        // Buscar o usuário
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+
+        // Limpar as associações dos roles antes de excluir o usuário
+        user.getRoles().clear(); // Remove todas as associações (se houver)
+
+        // Deletar o usuário
+        userRepository.delete(user);
 
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content), mais adequado para DELETE
     }
+
 
 }
